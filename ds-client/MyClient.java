@@ -10,10 +10,10 @@ public class MyClient {
             DataOutputStream dout = new DataOutputStream(s.getOutputStream());
             BufferedReader din = new BufferedReader(new InputStreamReader(s.getInputStream()));
             String str;
+            // dispatcher a = new dispatcher(dout, din, "HELO\n", str);
 
             dout.write(("HELO\n").getBytes());
             dout.flush();
-            System.out.println("SENT: HELO");
             str = din.readLine();
             System.out.println("RCVD: " + str);
 
@@ -40,12 +40,6 @@ public class MyClient {
             System.out.println("SENT: QUIT");
             str = din.readLine();
             System.out.println("RCVD: " + str);
-
-            // dout.writeUTF("BYE");
-            // System.out.println("SENT: BYE");
-
-            // str = (String) dis.readUTF();
-            // System.out.println("RCVD: " + str);
 
             din.close();
             dout.close();
