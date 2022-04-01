@@ -1,49 +1,77 @@
 import java.io.*;
 import java.net.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MyClient {
-    public static void main(String[] args) {
-        try {
-            Socket s = new Socket("127.0.0.1", 50000);
+    public Socket s;
+    DataOutputStream dout;
+    BufferedReader din;
 
+    public MyClient() {
+        try {
+            s = new Socket("127.0.0.1", 50000);
+            dout = new DataOutputStream(s.getOutputStream());
+            din = new BufferedReader(new InputStreamReader(s.getInputStream()));
+        } catch (IOException e) {
+            System.out.println(e);
+        }
+    }
+
+    public String sender(String msg) {
+        msg = msg + "\n";
+        String msgPack = "";
+        try {
+            dout.write((msg).getBytes());
+            dout.flush();
+            msgPack = din.readLine();
+            System.out.println("RCVD: " + msgPack);
+        } catch (IOException e) {
+            System.out.println(e);
+        }
+        return msgPack;
+    }
+
+    public index[](){
+
+    }
+
+    public static void main(String[] args) {
+
+        try {
             // DataInputStream dis = new DataInputStream(s.getInputStream());
-            DataOutputStream dout = new DataOutputStream(s.getOutputStream());
-            BufferedReader din = new BufferedReader(new InputStreamReader(s.getInputStream()));
-            String str;
             // dispatcher a = new dispatcher(dout, din, "HELO\n", str);
 
-            dout.write(("HELO\n").getBytes());
-            dout.flush();
-            str = din.readLine();
-            System.out.println("RCVD: " + str);
+            // form a new client
+            MyClient client = new MyClient();
 
-            dout.write(("AUTH aaa\n").getBytes());
-            dout.flush();
-            System.out.println("SENT: AUTH");
-            str = din.readLine();
-            System.out.println("RCVD: " + str);
+            /*****************************************************************/
+            // acknowledgement
+            client.sender("HELO");
+            client.sender("AUTH Kiba");
+            client.sender("REDY");
+            /*****************************************************************/
 
-            dout.write(("REDY\n").getBytes());
-            dout.flush();
-            System.out.println("SENT: REDY");
-            str = din.readLine();
-            System.out.println("RCVD: " + str);
+            /*****************************************************************/
+            // gets all servers from cluster side and stored in "String list"
+            String list;
+            list = client.sender("GETS All");
+            client.sender("OK");
 
-            dout.write(("SCHD 0 super-silk 0\n").getBytes());
-            dout.flush();
-            System.out.println("SENT: SCHD");
-            str = din.readLine();
-            System.out.println("RCVD: " + str);
+            client.sender("OK");
+            /*****************************************************************/
 
-            dout.write(("QUIT\n").getBytes());
-            dout.flush();
-            System.out.println("SENT: QUIT");
-            str = din.readLine();
-            System.out.println("RCVD: " + str);
+            /*****************************************************************/
+            // find the largest server in the list and schedule it "hard-coded".
+            client.sender("SCHD 0 super-silk 0");
+            client.sender("OK");
+            /*****************************************************************/
 
-            din.close();
-            dout.close();
-            s.close();
+            client.sender("QUIT");
+
+            client.din.close();
+            client.dout.close();
+            client.s.close();
 
         } catch (Exception e) {
             System.out.println(e);
