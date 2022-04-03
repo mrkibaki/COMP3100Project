@@ -1,5 +1,7 @@
-Macquerie University
+Macquerie University 
+
 Student/Developer: Chenxu Lin
+
 SID: 44469578
 
 This project for building a vanilla version of ds-client,
