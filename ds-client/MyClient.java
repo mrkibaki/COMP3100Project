@@ -1,6 +1,5 @@
 import java.io.*;
 import java.net.*;
-// import java.nio.CharBuffer;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -9,12 +8,10 @@ public class MyClient {
     public Socket s;
     DataOutputStream dout;
     BufferedReader din;
-    // CharBuffer buffer;
 
     public MyClient() {
         try {
             s = new Socket("127.0.0.1", 50000);
-            // buffer = CharBuffer.allocate(8192);
             dout = new DataOutputStream(s.getOutputStream());
             din = new BufferedReader(new InputStreamReader(s.getInputStream()));
         } catch (IOException e) {
@@ -27,9 +24,6 @@ public class MyClient {
         try {
             dout.write((msg + "\n").getBytes());
             dout.flush();
-            // buffer.flip();
-            // buffer.toString
-            // buffer.clear();
             msgPack = din.readLine();
             System.out.println("RCVD: " + msgPack);
         } catch (IOException e) {
@@ -46,6 +40,7 @@ public class MyClient {
         return num;
     }
 
+    // get number of servers from OK
     public String serverInfo(String msg, int serverNum) {
         String msgPack = "";
         String lineReader = "";
@@ -75,35 +70,28 @@ public class MyClient {
             /************************ Acknowledgement ************************/
             // acknowledgement
             client.sender("HELO");
-            String user = System.getProperty("user.name");
-            client.sender("AUTH" + user);
+            String user = System.getProperty("user.name");// get user name from the system
+            client.sender("AUTH " + user);
             String firstJob;
             firstJob = client.sender("REDY");
-            
+
             /******************** Getting server list ************************/
             // gets all servers from cluster side and stored in "String list"
 
-            // 这段用来得到服务器的数量
             String serverNumber = client.sender("GETS All");
             int serverNum = client.serverNum(serverNumber);
 
-            // 这段用来得倒服务器清单的String
+            // store server info in "String list" by fucntion "serverInfo"
             String list;
             list = client.serverInfo("OK", serverNum);
 
             client.sender("OK");
-            /************************ Server List ****************************/
+
+            /********************** Server List Array ***********************/
             // create a string arraylist (called "serverList")
             // to store all server info needed in
             List<String[]> serverList = new ArrayList<String[]>();// servers
-
             String[] listLine = list.split("\n");
-
-            // TESTER多少个服务器
-            // for (String a : listLine) {
-            // System.out.println("可用的服务器： " + a + "\n");
-            // }
-
             System.out.println(listLine.length);
 
             // split server info by how many \n among them
@@ -116,9 +104,6 @@ public class MyClient {
                 serverInfo[1] = index[1];// server ID
                 serverInfo[2] = index[4];// server cores
                 serverList.add(serverInfo);// serverList CONTAINS serverInfo[]
-
-                // System.out.println(serverInfo[0] + serverInfo[1] + serverInfo[2] +
-                // "cdsvfdb\n\n");
             }
 
             /************************** LRR **********************************/
@@ -129,6 +114,7 @@ public class MyClient {
                     largest = node;
                 }
             }
+
             // collect all servers with largest cores in the list, store them in
             // "utilisedServers"
             List<String[]> utilisedServers = new ArrayList<String[]>();
@@ -137,55 +123,44 @@ public class MyClient {
                     utilisedServers.add(node);
                 }
             }
+
             // Iterator for utilisedServers list
             Iterator<String[]> iter = utilisedServers.iterator();
-            Iterator<String[]> beginner = utilisedServers.iterator();
-
-            // TESTER!!多少个最大服务器
-            // for (String[] a : utilisedServers) {
-            // System.out.println("最大服务器: " + a[0] + a[1] + a[2] + "\n");
-            // }
+            // Iterator<String[]> beginner = utilisedServers.iterator();
 
             // asign the firstJob
             String splitFirstJob[] = firstJob.split(" ");
             client.sender(
                     "SCHD " + splitFirstJob[2] + " " + utilisedServers.get(0)[0] + " " + utilisedServers.get(0)[1]);
+            System.out.println("JOB ID " + splitFirstJob[2] + "has been scheduled to " + utilisedServers.get(0)[0] + " "
+                    + utilisedServers.get(0)[1] + "\n");
 
             // assign jobs to utilisedServers
             String getJob = "";
             String jobInfo[];
             String box[] = new String[3];
+            if (iter.hasNext()) {
+                box = iter.next();// Because the firstJob has been processed
+            }
             while (true) {
                 getJob = client.sender("REDY");
                 if (getJob.equals("NONE")) {
                     break;
                 }
-                // System.out.println("this is a message" + getJob);
-                // if (jobInfo[0].equals("JCPL")) {
-                // System.out.println("this is a test shows error while it doesnt ");
-                // // client.sender("REDY");
-                // // 这个redy直接删掉，如果jcpl被读到了直接skip这个condition
-                // // 可以用if包括JCPL的部分else包括跳过iter的部分
                 jobInfo = getJob.split(" ");
                 if (!jobInfo[0].equals("JCPL")) {
                     if (iter.hasNext()) {
                         box = iter.next();
                     }
                     client.sender("SCHD " + jobInfo[2] + " " + box[0] + " " + box[1]);
+                    System.out
+                            .println("JOB ID " + jobInfo[2] + "has been scheduled to " + box[0] + " " + box[1] + "\n");
 
                     if (!iter.hasNext()) {
-                        iter = beginner;
+                        iter = utilisedServers.iterator();
                     }
                 }
             }
-
-            /*****************************************************************/
-
-            /*************** Largest server (hard coded) ***********************/
-            // find the largest server in the list and schedule it "hard-coded".
-            // client.sender("SCHD 0 super-silk 0");
-            // client.sender("OK");
-            /*****************************************************************/
 
             /*****************************************************************/
             // disconnection
@@ -200,5 +175,4 @@ public class MyClient {
             System.out.println(e);
         }
     }
-
 }
