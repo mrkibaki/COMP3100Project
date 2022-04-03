@@ -78,13 +78,13 @@ public class MyClient {
             /******************** Getting server list ************************/
             // gets all servers from cluster side and stored in "String list"
 
+            // store server number in "serverNum" by function "serverNum"
             String serverNumber = client.sender("GETS All");
             int serverNum = client.serverNum(serverNumber);
 
-            // store server info in "String list" by fucntion "serverInfo"
+            // store server info in String "list" by fucntion "serverInfo"
             String list;
             list = client.serverInfo("OK", serverNum);
-
             client.sender("OK");
 
             /********************** Server List Array ***********************/
@@ -132,15 +132,18 @@ public class MyClient {
             String splitFirstJob[] = firstJob.split(" ");
             client.sender(
                     "SCHD " + splitFirstJob[2] + " " + utilisedServers.get(0)[0] + " " + utilisedServers.get(0)[1]);
-            System.out.println("JOB ID " + splitFirstJob[2] + "has been scheduled to " + utilisedServers.get(0)[0] + " "
-                    + utilisedServers.get(0)[1] + "\n");
+            System.out
+                    .println("JOB ID " + splitFirstJob[2] + " has been scheduled to " + utilisedServers.get(0)[0] + " "
+                            + utilisedServers.get(0)[1] + "\n");
 
             // assign jobs to utilisedServers
             String getJob = "";
             String jobInfo[];
             String box[] = new String[3];
             if (iter.hasNext()) {
-                box = iter.next();// Because the firstJob has been processed
+                box = iter.next();
+                // Because the firstJob has been processed, first loop shuld start from the
+                // second server
             }
             while (true) {
                 getJob = client.sender("REDY");
@@ -154,7 +157,7 @@ public class MyClient {
                     }
                     client.sender("SCHD " + jobInfo[2] + " " + box[0] + " " + box[1]);
                     System.out
-                            .println("JOB ID " + jobInfo[2] + "has been scheduled to " + box[0] + " " + box[1] + "\n");
+                            .println("JOB ID " + jobInfo[2] + " has been scheduled to " + box[0] + " " + box[1] + "\n");
 
                     if (!iter.hasNext()) {
                         iter = utilisedServers.iterator();
